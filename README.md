@@ -1,6 +1,6 @@
 # Manti-Core Craftsman
 
-Formbuilder module on Manti-Core Platform
+A Manti-Core Platform package for form building
 
 ## Quick Start
 
