@@ -18,7 +18,7 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-export default (props) => {
+export function Publish(props) {
     const classes = useStyles();
 
     let formNameVal = typeof props.formData === 'undefined' ? "":props.formData.formName;

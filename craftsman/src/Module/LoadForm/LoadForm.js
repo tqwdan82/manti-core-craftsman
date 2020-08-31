@@ -3,29 +3,25 @@
  */
 import React, { useState, useEffect } from 'react'
 import './LoadForm.css'
-import * as Util from './util/util'
-import * as Components from './Component/components';
-import { makeStyles } from '@material-ui/core/styles';
-import { Grid, Box, Button, Snackbar, Typography } from "@material-ui/core";
-import MuiAlert from '@material-ui/lab/Alert';
+import * as Util from '../../util/util'
+import * as Components from '../../Component/components';
+import { makeStyles, createMuiTheme, ThemeProvider } from '@material-ui/core/styles';
+import {  Box, Button, Grid, Paper, Snackbar, Typography } from "@material-ui/core";
+// import MuiAlert from '@material-ui/lab/Alert';
+import { themes, themeNames } from "../../Theme/themes";
+import { themeFont, FontKey } from "../../Theme/Font/font";
+import { Alert } from '../';
 
 const useStyles = makeStyles((theme) => ({
   root: {
-    flexGrow: 1
+    height: '100vh'
   },
   paper: {
-    padding: theme.spacing(2),
-    textAlign: 'center',
-    color: theme.palette.text.secondary,
+    height: '100%'
   }
 }));
 
-// the alert/toast to show the status of http calls
-function Alert(props) {
-  return <MuiAlert elevation={6} variant="filled" {...props} />;
-}
-
-export default function LoadForm({match}) {
+export function LoadForm({match}) {
   const classes = useStyles();
 
   useEffect(()=>{
@@ -36,6 +32,17 @@ export default function LoadForm({match}) {
   const [formComponents, setFormComponents] = useState([]); // state storing the components that are rendered in the preview view
   const [sbOpen, setSbOpen] = useState(false); // state storing the state of the alert/toast (true=opened, false=closed)
   const [svrResStatus, setSvrResStatus] = useState({}); // state storing response from server to indicate the type of the alert/toast
+  const [theme, setTheme] = useState();
+  const [font_type, setFont] = useState("");
+  let theming = 0;
+
+  const renderTheme = () => {
+    if (typeof theme === "undefined") {
+      return;
+    } else {
+      theming = theme.theme;
+    }
+  };
 
   // activate or show the alert/toast
   const handleSBClick = (success) => {
@@ -74,15 +81,16 @@ export default function LoadForm({match}) {
     } else { //when there is form id 
 
       // retrieve the form data from the serverside application
-      //../../../web/craftsman/api/singleForm?form=
-      const response = await fetch(`http://localhost:8001/web/craftsman/api/singleForm?form=${match.params.id}`);
-      // const response = await fetch(`../../../web/craftsman/api/singleForm?form=${match.params.id}`);
+      // const response = await fetch(`http://localhost:8001/web/craftsman/api/singleForm?form=${match.params.id}`);
+      const response = await fetch(`../../../web/craftsman/api/singleForm?form=${match.params.id}`);
       let constructedFields = [];
       let formConfig = await response.json();
       formConfig.fields.forEach((field) => {
         let FComponent = Components[field.type].Component;
         constructedFields.push(<FComponent formData={field.config}/>);
       });
+      setTheme({theme:formConfig.formTheme})
+      setFont(formConfig.formFont);
       setSvrFormData(formConfig);
       setFormComponents(constructedFields);
     }
@@ -111,7 +119,8 @@ export default function LoadForm({match}) {
       data: data
     };
     const response = await fetch(
-      `http://localhost:8001/web/craftsman/api/formSubmit`,
+      // `http://localhost:8001/web/craftsman/api/formSubmit`,
+      `../../../web/craftsman/api/formSubmit`,
       {
         method: 'POST',
         mode: 'cors',
@@ -132,18 +141,54 @@ export default function LoadForm({match}) {
         handleSBClick(false);  
       });
   };
+  
+  const SubmitButton = () => {
+
+    if(!svrFormData.appName || !svrFormData.serviceName || !svrFormData.opsName){
+      return(
+        <div></div>
+      );
+    }else{
+      return(
+        <Button 
+          type="submit" 
+          color="primary"
+          variant="contained"
+          fullWidth>
+          Submit
+        </Button>
+      );
+    }
+  };
 
   return (
+    // <div>
+      
       <div className={classes.root}>
           {/* Container to the form content  */}
+          
+          {renderTheme()}
+                      <ThemeProvider theme={themes[themeNames[theming]]}>
+                        <ThemeProvider
+                          theme={(theme) =>
+                            createMuiTheme({
+                              ...theme,
+                              typography: themeFont[FontKey[font_type]],
+                            })
+                          }
+                        >
+                          <Paper className={classes.paper} style={{height:'100%'}}>  
           <Grid 
           container
             spacing={0}
             align="center"
-            justify="center"
+            // justify="center"
             direction="column" 
           >
+            
             <form id="form-load-data" name="form-load-data" onSubmit={submitForm}>
+            
+                  
               <Grid item>
                 <Box
                   display="flex"
@@ -170,7 +215,9 @@ export default function LoadForm({match}) {
                 >
                   <Grid container spacing={1}>
                     <Grid item xs={12} sm={12}>
-                      {renderForm()}
+                      
+                            {renderForm()}
+                          
                     </Grid>
                   </Grid>
                 </Box>
@@ -185,30 +232,30 @@ export default function LoadForm({match}) {
                   css={{ maxWidth: '80vw' }}
                   justifyContent="center"
                 >
-                  <Button 
-                    type="submit" 
-                    color="primary"
-                    variant="contained"
-                    fullWidth>
-                    Submit
-                  </Button>
+                  <SubmitButton />
+
                 </Box>
               </Grid>
+              
             </form>
+            
           </Grid>
-
+          
+          </Paper>
+                        </ThemeProvider>
+                      </ThemeProvider>
           {/* toast displaying status */}
-          <Snackbar 
-          open={sbOpen} 
-          autoHideDuration={3000} 
-          onClose={handleSBClose}
-          anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-          >
-          <Alert onClose={handleSBClose} severity={svrResStatus.status}>
-            {svrResStatus.message}
-          </Alert>
-        </Snackbar>
-      </div>
+      <Snackbar 
+      open={sbOpen} 
+      autoHideDuration={3000} 
+      onClose={handleSBClose}
+      anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+      <Alert onClose={handleSBClose} severity={svrResStatus.status}>
+        {svrResStatus.message}
+      </Alert>
+      </Snackbar>
+    </div>
   )
   
 }

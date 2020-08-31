@@ -1,7 +1,6 @@
 import React from 'react';
 import './App.css';
-import LoadForm from "./LoadForm"
-import DevForm from "./DevForm"
+import {DevForm, LoadForm} from "./Module"
 import {BrowserRouter as Router, Switch, Route} from 'react-router-dom'
 
 function App() {

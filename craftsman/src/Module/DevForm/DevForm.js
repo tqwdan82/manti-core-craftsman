@@ -4,13 +4,16 @@
 import React, { useState, useEffect } from 'react'
 import PropTypes from 'prop-types';
 import './DevForm.css'
-import * as Util from './util/util'
-import * as Components from './Component/components';
-import ListComponent from './Component/listComponent';
-import PublishComponent from './Publish';
-import { makeStyles } from '@material-ui/core/styles';
-import { Grid, AppBar, Tabs, Tab, Paper,Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Snackbar } from "@material-ui/core";
-import MuiAlert from '@material-ui/lab/Alert';
+import * as Util from '../../util/util'
+import * as Components from '../../Component/components';
+import ListComponent from '../../Component/listComponent';
+import { Publish, Alert } from '../';
+import { makeStyles, createMuiTheme, ThemeProvider } from '@material-ui/core/styles';
+import { themes, themeNames, themeButtons } from "../../Theme/themes";
+import { themeFont, FontKey } from "../../Theme/Font/font";
+import { Grid, AppBar, Drawer, List, ListItem, Divider, FormControl, InputLabel, NativeSelect,
+  Fab, Tabs, Tab, Paper,Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Snackbar } from "@material-ui/core";
+import EditIcon from "@material-ui/icons/Edit";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -27,6 +30,12 @@ const useStyles = makeStyles((theme) => ({
     float: "right",
     position: "relative",
     transform: "translateY(-50%)"
+  },
+  fab: {
+    position: "absolute",
+    top: theme.spacing(8),
+    right: theme.spacing(2),
+    zIndex: 1300
   },
 }));
 
@@ -65,12 +74,7 @@ function a11yProps(index) {
   };
 };
 
-// the alert/toast to show the status of http calls
-function Alert(props) {
-  return <MuiAlert elevation={6} variant="filled" {...props} />;
-}
-
-export default function DevForm({match}) {
+export function DevForm({match}) {
   const classes = useStyles();
 
   const [formComponents, setformComponents] = useState([]); // state storing the components that are rendered in the preview view
@@ -83,10 +87,36 @@ export default function DevForm({match}) {
   const [pfData, setPfData] = useState({}); // state storing the data in the publish page form
   const [sbOpen, setSbOpen] = useState(false); // state storing the state of the alert/toast (true=opened, false=closed)
   const [svrResStatus, setSvrResStatus] = useState({}); // state storing response from server to indicate the type of the alert/toast
+  const [theme, setTheme] = useState();
+  const [font_type, setFont] = useState("");
+  const [themeopen, setThemeOpenState] = useState(false);
+  let theming = 0;
+  const fontSelection = [
+    { display: "Comic", value: "0" },
+    { display: "Arial", value: "1" },
+    { display: "Sans", value: "2" },
+    { display: "Roboto", value: "3" },
+    { display: "Helve", value: "4" },
+  ];
+  // const [fontSelect, setFontSelect] = useState(fontSelection);
 
   useEffect(()=>{
     fetchFormData();
   },[])
+
+
+
+  const toggleDrawer = () => {
+    setThemeOpenState(!themeopen);
+  };
+
+  const onhandleClick = (component) => {
+    setTheme(component);
+  };
+
+  const handle_fontChange = (event) => {
+    setFont(event.target.value);
+  };
 
   // make the http call to the server to retrieve form data if there is input parameters to this component
   const fetchFormData = async () => {
@@ -105,8 +135,8 @@ export default function DevForm({match}) {
     } else { // if there is input parameters
 
       //make a call to the application server to retrieve form data
-      const response = await fetch(`http://localhost:8001/web/craftsman/api/singleForm?form=${match.params.id}`);
-      // const response = await fetch(`../../../web/craftsman/api/singleForm?form=${match.params.id}`);
+      // const response = await fetch(`http://localhost:8001/web/craftsman/api/singleForm?form=${match.params.id}`);
+      const response = await fetch(`../../../web/craftsman/api/singleForm?form=${match.params.id}`);
       let formConfig = await response.json();
     
       setFormId(formConfig.formId);
@@ -145,7 +175,8 @@ export default function DevForm({match}) {
         mfcField['type']= field.type;
         constructedFcData.push(mfcField);
       });
-
+      setTheme({theme:formConfig.formTheme});
+      setFont(formConfig.formFont);
       setDbData(constructedDbData);
       setformComponents(constructedFields);
       setFCData(constructedFcData);
@@ -406,6 +437,14 @@ export default function DevForm({match}) {
     return formComponents.map(Comp => (Comp));
   }
 
+  const renderTheme = () => {
+    if (typeof theme === "undefined") {
+      return;
+    } else {
+      theming = theme.theme;
+    }
+  };
+
   //render the form configuration component on the form construction page
   const renderFormConstruction = () =>  {
     return fcData.map((Comp, index) => {
@@ -451,11 +490,14 @@ export default function DevForm({match}) {
     if(!!formId){
       data.formId = formId;
     }
+    //set theme & font
+    data.fontTheme = theme.theme;
+    data.formFont = font_type;
 
     //make the call to server to save the form fields
     const response = await fetch(
-      //`../../../web/craftsman/api/craftsmanFormFormFields`
-      `http://localhost:8001/web/craftsman/api/craftsmanFormFormFields`,
+      `../../../web/craftsman/api/craftsmanFormFormFields`,
+      // `http://localhost:8001/web/craftsman/api/craftsmanFormFormFields`,
       {
         method: 'POST',
         mode: 'cors',
@@ -513,9 +555,10 @@ export default function DevForm({match}) {
               </Paper>
             </Grid>
             <Grid item xs={12} sm={10}>
-              <Paper className={classes.paper} style={{height:'100%'}}>
-                {renderFormConstruction()}
-              </Paper>
+              
+                  <Paper className={classes.paper} style={{height:'100%'}}>
+                    {renderFormConstruction()}
+                  </Paper>
             </Grid>
           </Grid>
         </TabPanel>
@@ -524,9 +567,31 @@ export default function DevForm({match}) {
         <TabPanel value={value} index={1}>
           <Grid container style={{height:'90vh'}}>
             <Grid item xs={12} sm={12}>
-              <Paper className={classes.paper} style={{height:'100%'}}>
-                {renderForm()}
-              </Paper>
+              {renderTheme()}
+              <Fab
+                  size="small"
+                  color="primary"
+                  aria-label="add"
+                  onClick={toggleDrawer}
+                  className={classes.fab}
+              >
+                  <EditIcon />
+              </Fab>
+              <ThemeProvider theme={themes[themeNames[theming]]}>
+                <ThemeProvider
+                  theme={(theme) =>
+                    createMuiTheme({
+                      ...theme,
+                      typography: themeFont[FontKey[font_type]],
+                    })
+                  }
+                >
+                  <Paper className={classes.paper} style={{height:'100%'}}>
+                    {renderForm()}
+                  </Paper>
+                </ThemeProvider>
+              </ThemeProvider>
+
             </Grid>
           </Grid>
         </TabPanel>
@@ -537,7 +602,7 @@ export default function DevForm({match}) {
             <Grid item xs={12} sm={12}>
               <Paper className={classes.paper} style={{height:'100%'}}>
                 <form id="form-config-data" onSubmit={submitFormData}>
-                  <PublishComponent formData={pfData}/>
+                  <Publish formData={pfData}/>
                 </form>
               </Paper>
             </Grid>
@@ -560,6 +625,39 @@ export default function DevForm({match}) {
             {svrResStatus.message}
           </Alert>
         </Snackbar>
+
+        <Drawer open={themeopen} anchor="right" onClose={toggleDrawer}>
+            <List>
+                {Object.keys(themeButtons).map(function (key) {
+                  let Button = themeButtons[key];
+                  return (
+                      <ListItem button key={key}>
+                      <Grid item xs={12} sm={6}>
+                          <Button onClick={onhandleClick} />
+                      </Grid>
+                      </ListItem>
+                  );
+                })}
+            </List>
+            <FormControl variant="outlined">
+                <InputLabel id="fontSelect-label">Font</InputLabel>
+                <NativeSelect
+                  labelid="fontSelect-label"
+                  id="fontSelect"
+                  value={font_type}
+                  onChange={handle_fontChange}
+                  label="Font"
+                >
+                <option aria-label="None" value="" />
+                {fontSelection.map(function(selection) {
+                    return (
+                      <option value={selection.value}>{selection.display}</option>
+                    );
+                })} 
+                </NativeSelect>
+            </FormControl>
+            <Divider />
+            </Drawer>
       </div>
   )
   
