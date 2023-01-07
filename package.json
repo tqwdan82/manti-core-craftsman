@@ -1,21 +1,15 @@
 {
-  "name": "reactexpress",
-  "version": "1.0.0",
-  "description": "Starter kit for creating React/Redux and Express apps",
-  "main": "server.js",
+  "name": "craftsman2",
+  "version": "0.0.2",
+  "description": "",
+  "main": "PakApplication.js",
   "scripts": {
-    "client-install": "cd client && npm install",
-    "start": "node server.js",
-    "server": "nodemon server.js",
-    "client": "npm start --prefix client",
-    "dev": "concurrently \"npm run server\" \"npm run client\""
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "Brad Traversy & Gregory Assasie",
-  "license": "MIT",
-  "devDependencies": {},
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
   "dependencies": {
-    "concurrently": "^4.1.1",
-    "express": "^4.17.1",
-    "nodemon": "^1.19.1"
+    "dotenv": "^16.0.3"
   }
 }

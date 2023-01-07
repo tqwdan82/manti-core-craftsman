@@ -1,0 +1,19 @@
+{
+     "timestamps": false,
+     "paranoid": false,
+     "columns": [
+          {
+             "columnName": "pageId",
+             "columnDataType": "uuid",
+             "isPrimaryKey": true
+          },
+          {
+               "columnName": "pageName",
+               "columnDataType": "string"
+          },
+          {
+               "columnName": "page",
+               "columnDataType": "string"
+          }
+     ]
+}

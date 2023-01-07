@@ -1,0 +1,27 @@
+{
+     "timestamps": false,
+     "paranoid": false,
+     "columns": [
+          {
+             "columnName": "pageComponentId",
+             "columnDataType": "uuid",
+             "isPrimaryKey": true
+          },
+          {
+               "columnName": "pageId",
+               "columnDataType": "string"
+          },
+          {
+               "columnName": "componentType",
+               "columnDataType": "string"
+          },
+          {
+               "columnName": "config",
+               "columnDataType": "string"
+          },
+          {
+               "columnName": "order",
+               "columnDataType": "string"
+          }
+     ]
+}
